@@ -133,6 +133,70 @@ void *m_malloc(size_t size) {
 
 void m_free(void *ptr) {
 
+	if(!ptr)
+		return;
+
+	p_meta tmp = ptr - META_SIZE;
+
+	if(tmp == last){
+		last = tmp->prev;
+		last->next = NULL;
+		free(tmp);
+		return;
+	}
+
+	if(tmp->prev && tmp->prev->free == 1){
+		int size = tmp->size =tmp->prev->size + META_SIZE;
+		p_meta prev = tmp->prev->prev;
+		p_meta next = tmp->next;
+		free(tmp->prev);
+		free(tmp);
+
+		tmp = (p_meta)malloc(META_SIZE + size);
+		tmp->size = size;
+		tmp->free = 1;
+		tmp->prev = prev;
+		tmp->next = next;
+
+		if(!prev)
+			base = tmp;
+		else
+			prev->next = tmp;
+
+		if(!next)
+			last = tmp;
+		else
+			next->prev = tmp;
+	}
+
+	if(tmp -> next && tmp ->next ->free ==1){
+		int size = tmp->size + tmp -> next-> size + META_SIZE;
+		p_meta prev = tmp->prev;
+		p_meta next = tmp-> next->next;
+		free(tmp->next);
+		free(tmp);
+
+		tmp = (p_meta)malloc(META_SIZE + size);
+		tmp->size = size;
+		tmp->free = 1;
+		tmp->prev = prev;
+		tmp->next = next;
+
+		if(!prev)
+			base = tmp;
+		else
+			prev->next = tmp;
+
+		if(!next)
+			last = tmp;
+		else
+			next->prev = tmp;
+	}
+
+	tmp->free =1;
+
+	return;
+
 }
 
 void*
